@@ -808,13 +808,13 @@ function renderExamPreview(title, instructions) {
   const labelName = document.getElementById('label-student-name').value.trim() || 'ชื่อ-นามสกุล';
 
   const showClass = document.getElementById('show-student-class').checked;
-  const labelClass = document.getElementById('label-student-class').value.trim() || 'ชั้นเรียน';
+  const labelClass = document.getElementById('label-student-class').value.trim() || 'เลขที่สอบ';
 
   const showNo = document.getElementById('show-student-no').checked;
-  const labelNo = document.getElementById('label-student-no').value.trim() || 'เลขที่';
+  const labelNo = document.getElementById('label-student-no').value.trim() || 'ว่าง2';
 
   const showId = document.getElementById('show-student-id').checked;
-  const labelId = document.getElementById('label-student-id').value.trim() || 'รหัสผู้สอบ';
+  const labelId = document.getElementById('label-student-id').value.trim() || 'ว่าง3';
 
   // Pagination parameters
   const PAGE_HEIGHT_BUDGET = 920; // Safe height in px for 210x297mm page (minus padding)

@@ -366,8 +366,8 @@ function handleImageUpload(e) {
     img.onload = function() {
       // Compress image size using canvas
       const canvas = document.createElement('canvas');
-      const MAX_WIDTH = 800;
-      const MAX_HEIGHT = 600;
+      const MAX_WIDTH = 1600;
+      const MAX_HEIGHT = 1600;
       let width = img.width;
       let height = img.height;
 
@@ -389,7 +389,7 @@ function handleImageUpload(e) {
       ctx.drawImage(img, 0, 0, width, height);
 
       // Convert canvas to compressed jpeg
-      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
       currentQuestionImageBase64 = compressedBase64;
       imagePreviewElement.src = compressedBase64;
       imagePreviewContainer.style.display = 'flex';
@@ -816,6 +816,16 @@ function renderExamPreview(title, instructions) {
   const showId = document.getElementById('show-student-id').checked;
   const labelId = document.getElementById('label-student-id').value.trim() || 'ว่าง3';
 
+  // Get image size setting
+  const imageSizeSelect = document.getElementById('exam-image-size-select');
+  const imageSize = imageSizeSelect ? imageSizeSelect.value : 'large';
+
+  let imgHeightBudget = 450;
+  if (imageSize === 'small') imgHeightBudget = 200;
+  else if (imageSize === 'medium') imgHeightBudget = 320;
+  else if (imageSize === 'large') imgHeightBudget = 450;
+  else if (imageSize === 'xlarge') imgHeightBudget = 600;
+
   // Pagination parameters
   const PAGE_HEIGHT_BUDGET = 920; // Safe height in px for 210x297mm page (minus padding)
   const HEADER_ESTIMATED_HEIGHT = 160; // Estimated height of header block on page 1
@@ -836,7 +846,7 @@ function renderExamPreview(title, instructions) {
 
     // Image height
     if (q.image) {
-      estimatedHeight += 280; // height of image preview box + margin
+      estimatedHeight += imgHeightBudget; // height of image preview box + margin
     }
 
     // Options height
@@ -908,7 +918,7 @@ function renderExamPreview(title, instructions) {
       
       let imgHTML = '';
       if (q.image) {
-        imgHTML = `<img class="exam-q-img" src="${q.image}" alt="รูปประกอบข้อ ${q.num}">`;
+        imgHTML = `<img class="exam-q-img img-size-${imageSize}" src="${q.image}" alt="รูปประกอบข้อ ${q.num}">`;
       }
 
       // Single column check

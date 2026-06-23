@@ -1348,13 +1348,31 @@ body {
 }
 
 .exam-q-img {
-  max-width: 85%;
-  max-height: 280px;
   margin: 12px 0 12px 30px;
   border: 1px solid #ddd;
   border-radius: var(--radius-sm);
   display: block;
   object-fit: contain;
+}
+
+.exam-q-img.img-size-small {
+  max-height: 200px;
+  max-width: 80%;
+}
+
+.exam-q-img.img-size-medium {
+  max-height: 320px;
+  max-width: 90%;
+}
+
+.exam-q-img.img-size-large {
+  max-height: 450px;
+  max-width: 95%;
+}
+
+.exam-q-img.img-size-xlarge {
+  max-height: 600px;
+  max-width: 100%;
 }
 
 .exam-q-choices {

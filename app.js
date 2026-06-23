@@ -782,6 +782,13 @@ generatorForm.addEventListener('submit', function(e) {
   printPreviewContainer.style.display = 'flex';
   document.body.style.overflow = 'hidden'; // Lock main scrolling
 
+  // Sync image size select from setup tab to preview control bar
+  const imageSizeVal = document.getElementById('exam-image-size-select').value;
+  const previewImageSizeSelectElement = document.getElementById('preview-image-size-select');
+  if (previewImageSizeSelectElement) {
+    previewImageSizeSelectElement.value = imageSizeVal;
+  }
+
   // View: Exam (Default)
   renderExamPreview(title, instructions);
 });
@@ -1185,6 +1192,30 @@ toggleViewKeyBtn.addEventListener('click', () => {
 printExamBtn.addEventListener('click', () => {
   window.print();
 });
+
+// Sync and handle image size changes directly in Print Preview
+const previewImageSizeSelect = document.getElementById('preview-image-size-select');
+if (previewImageSizeSelect) {
+  previewImageSizeSelect.addEventListener('change', function() {
+    const newVal = this.value;
+    const examImageSizeSelect = document.getElementById('exam-image-size-select');
+    if (examImageSizeSelect) {
+      examImageSizeSelect.value = newVal;
+    }
+    
+    // Regenerate preview
+    const title = document.getElementById('exam-title-input').value.trim();
+    const instructions = document.getElementById('exam-instructions-input').value.trim();
+    
+    // Determine which view is active (Exam or Key)
+    const isExamView = toggleViewExamBtn.classList.contains('active');
+    if (isExamView) {
+      renderExamPreview(title, instructions);
+    } else {
+      renderAnswerKeyPreview(title);
+    }
+  });
+}
 
 // Filters inputs events
 searchQuestionInput.addEventListener('input', renderQuestionsList);

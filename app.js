@@ -883,10 +883,10 @@ function renderExamPreview(title, instructions) {
       let studentInfoHTML = '';
       if (showName || showClass || showNo || showId) {
         studentInfoHTML += '<div class="student-info-row">';
-        if (showName) studentInfoHTML += `<div class="student-field" contenteditable="true">${escapeHTML(labelName)}:..................................................</div>`;
-        if (showClass) studentInfoHTML += `<div class="student-field" contenteditable="true">${escapeHTML(labelClass)}:........................</div>`;
-        if (showNo) studentInfoHTML += `<div class="student-field" contenteditable="true">${escapeHTML(labelNo)}:.............</div>`;
-        if (showId) studentInfoHTML += `<div class="student-field" contenteditable="true">${escapeHTML(labelId)}:....................</div>`;
+        if (showName) studentInfoHTML += `<div class="student-field"><span class="field-label">${escapeHTML(labelName)}:</span><span class="field-value" contenteditable="true">&nbsp;</span></div>`;
+        if (showClass) studentInfoHTML += `<div class="student-field"><span class="field-label">${escapeHTML(labelClass)}:</span><span class="field-value" contenteditable="true">&nbsp;</span></div>`;
+        if (showNo) studentInfoHTML += `<div class="student-field"><span class="field-label">${escapeHTML(labelNo)}:</span><span class="field-value" contenteditable="true">&nbsp;</span></div>`;
+        if (showId) studentInfoHTML += `<div class="student-field"><span class="field-label">${escapeHTML(labelId)}:</span><span class="field-value" contenteditable="true">&nbsp;</span></div>`;
         studentInfoHTML += '</div>';
       }
 

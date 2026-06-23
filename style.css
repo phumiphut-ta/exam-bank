@@ -1348,12 +1348,13 @@ body {
 }
 
 .exam-q-img {
-  max-width: 60%;
-  max-height: 180px;
-  margin: 8px 0 8px 30px;
+  max-width: 85%;
+  max-height: 280px;
+  margin: 12px 0 12px 30px;
   border: 1px solid #ddd;
   border-radius: var(--radius-sm);
   display: block;
+  object-fit: contain;
 }
 
 .exam-q-choices {

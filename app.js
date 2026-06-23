@@ -836,7 +836,7 @@ function renderExamPreview(title, instructions) {
 
     // Image height
     if (q.image) {
-      estimatedHeight += 180; // height of image preview box + margin
+      estimatedHeight += 280; // height of image preview box + margin
     }
 
     // Options height

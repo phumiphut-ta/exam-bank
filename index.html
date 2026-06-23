@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบคลังข้อสอบอัจฉริยะ (exam-bank)</title>
+  <link rel="icon" type="image/png" href="favicon.png?v=1.0.7">
+  <link rel="apple-touch-icon" sizes="180x180" href="favicon.png?v=1.0.7">
+  <!-- Google Fonts: Sarabun for Thai document/exam layout, Outfit for modern UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=1.0.7">
+</head>
+<body>
+
+  <!-- Sidebar UI (ซ่อนเมื่อสั่งพิมพ์) -->
+  <aside class="sidebar no-print">
+    <div class="brand">
+      <div class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+      </div>
+      <h2>exam-bank</h2>
+    </div>
+    
+    <nav class="nav-menu">
+      <button class="nav-btn active" data-tab="dashboard">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <span>หน้าแรก</span>
+      </button>
+      <button class="nav-btn" data-tab="categories">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <span>หมวดหมู่ข้อสอบ</span>
+      </button>
+      <button class="nav-btn" data-tab="questions">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        <span>คลังข้อสอบ</span>
+      </button>
+      <button class="nav-btn" data-tab="generator">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <span>จัดชุดข้อสอบ</span>
+      </button>
+      <button class="nav-btn" data-tab="backup">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span>สำรอง/นำเข้าข้อมูล</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button id="theme-toggle" class="theme-btn">
+        <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+        <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        <span id="theme-text">โหมดมืด</span>
+      </button>
+      <div class="version">Version 1.0.0</div>
+    </div>
+  </aside>
+
+  <!-- Main Container -->
+  <main class="main-content no-print">
+    <!-- Header -->
+    <header class="main-header">
+      <div class="header-title">
+        <h1 id="page-title">หน้าแรก</h1>
+        <p id="page-desc">ภาพรวมคลังข้อสอบและสถิติการจัดชุดข้อสอบ</p>
+      </div>
+      <div class="header-actions">
+        <button id="quick-add-btn" class="btn btn-primary">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>เขียนข้อสอบใหม่</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Tab Contents -->
+    <div class="tab-viewport">
+      
+      <!-- TAB 1: Dashboard -->
+      <section id="tab-dashboard" class="tab-content active">
+        <div class="stats-grid">
+          <div class="stats-card card-gradient-blue">
+            <div class="card-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            </div>
+            <div class="card-info">
+              <h3>ข้อสอบทั้งหมด</h3>
+              <p id="stat-total-questions" class="stat-number">0</p>
+            </div>
+          </div>
+          <div class="stats-card card-gradient-purple">
+            <div class="card-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="card-info">
+              <h3>หมวดหมู่คำถาม</h3>
+              <p id="stat-total-categories" class="stat-number">0</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-sections">
+          <!-- Category Breakdown List -->
+          <div class="section-card">
+            <h3 class="section-title">สัดส่วนข้อสอบแยกตามหมวดหมู่</h3>
+            <div id="category-stats-list" class="category-breakdown-list">
+              <!-- Dynamically populated -->
+              <p class="empty-state">ยังไม่มีข้อมูลหมวดหมู่ข้อสอบ</p>
+            </div>
+          </div>
+
+          <!-- Quick Actions and Instructions -->
+          <div class="section-card card-highlight">
+            <h3 class="section-title">คำแนะนำในการพิมพ์ข้อสอบ</h3>
+            <div class="guide-steps">
+              <div class="step-item">
+                <span class="step-num">1</span>
+                <div>
+                  <strong>เพิ่มหมวดหมู่:</strong> สร้างหมวดหมู่ เช่น ภาษาไทย, คณิตศาสตร์, วิทยาศาสตร์ เพื่อจัดกลุ่มข้อสอบ
+                </div>
+              </div>
+              <div class="step-item">
+                <span class="step-num">2</span>
+                <div>
+                  <strong>เขียนข้อสอบ:</strong> เพิ่มคำถาม 4 ตัวเลือกพร้อมระบุเฉลยและแนบรูปภาพได้ตามต้องการ
+                </div>
+              </div>
+              <div class="step-item">
+                <span class="step-num">3</span>
+                <div>
+                  <strong>จัดชุดข้อสอบ:</strong> เลือกสุ่มข้อสอบตามสัดส่วนหมวดหมู่ที่ระบุ ตั้งค่าสุ่มสลับตัวเลือกได้
+                </div>
+              </div>
+              <div class="step-item">
+                <span class="step-num">4</span>
+                <div>
+                  <strong>พิมพ์เอกสาร A4:</strong> ตรวจสอบหน้าตัวอย่าง A4 และกดสั่งพิมพ์ผ่านระบบเบราว์เซอร์
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: Categories -->
+      <section id="tab-categories" class="tab-content">
+        <div class="categories-layout">
+          <!-- Add Category Form -->
+          <div class="section-card">
+            <h3 class="section-title">เพิ่มหมวดหมู่ใหม่</h3>
+            <form id="category-form" class="form-grid">
+              <div class="form-group">
+                <label for="category-name-input">ชื่อหมวดหมู่</label>
+                <input type="text" id="category-name-input" placeholder="เช่น คณิตศาสตร์ ม.1, วิทยาศาสตร์ทั่วไป" required>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">เพิ่มหมวดหมู่</button>
+            </form>
+          </div>
+
+          <!-- Categories List -->
+          <div class="section-card">
+            <h3 class="section-title">รายการหมวดหมู่ทั้งหมด</h3>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ชื่อหมวดหมู่</th>
+                    <th class="text-center" style="width: 120px;">จำนวนข้อสอบ</th>
+                    <th class="text-right" style="width: 150px;">การจัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="categories-table-body">
+                  <!-- Dynamically populated -->
+                  <tr>
+                    <td colspan="3" class="text-center empty-state">ยังไม่มีหมวดหมู่ข้อสอบ</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: Question Bank -->
+      <section id="tab-questions" class="tab-content">
+        <!-- Filter and Search Bar -->
+        <div class="filter-bar">
+          <div class="search-input-group">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="search-question-input" placeholder="ค้นหาข้อสอบด้วยคีย์เวิร์ดโจทย์...">
+          </div>
+          <div class="filter-select-group">
+            <select id="filter-category-select">
+              <option value="all">ทุกหมวดหมู่</option>
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Questions List Container -->
+        <div class="section-card" style="margin-top: 20px;">
+          <div class="section-header-flex">
+            <h3 class="section-title">รายการข้อสอบในคลัง</h3>
+            <span id="question-count-badge" class="badge">0 ข้อ</span>
+          </div>
+          <div id="questions-list" class="questions-list-container">
+            <!-- Dynamically populated -->
+            <div class="empty-state-container">
+              <p class="empty-state">ไม่พบข้อสอบในคลัง</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: Exam Generator -->
+      <section id="tab-generator" class="tab-content">
+        <div class="generator-layout">
+          <!-- Generator Config Form -->
+          <div class="section-card">
+            <h3 class="section-title">ตั้งค่าข้อมูลหัวข้อสอบ & การพิมพ์</h3>
+            <form id="generator-form" class="form-grid">
+              <div class="form-group">
+                <label for="exam-title-input">ชื่อข้อสอบ / วิชา</label>
+                <input type="text" id="exam-title-input" placeholder="เช่น ข้อสอบกลางภาควิชาคณิตศาสตร์ ม.1" value="ข้อสอบวัดผลวิชาการทดสอบ" required>
+              </div>
+
+              <div class="form-group">
+                <label for="exam-instructions-input">คำชี้แจงหัวข้อสอบ</label>
+                <textarea id="exam-instructions-input" rows="3" placeholder="เช่น คำชี้แจง: ข้อสอบฉบับนี้มีทั้งหมด ... ข้อ ให้นักเรียนเลือกข้อที่ถูกต้องที่สุดเพียงข้อเดียวลงในกระดาษคำตอบ">คำชี้แจง: ข้อสอบนี้มีลักษณะเป็นแบบเลือกตอบ 4 ตัวเลือก ให้นักเรียนเลือกคำตอบที่ถูกต้องที่สุดเพียงข้อเดียว</textarea>
+              </div>
+
+              <div class="form-group">
+                <label>ตั้งค่าช่องข้อมูลผู้สอบ (เปิด-ปิด และแก้ไขหัวข้อได้อิสระ)</label>
+                <div class="student-fields-config-container">
+                  <div class="field-config-row">
+                    <input type="checkbox" id="show-student-name" checked>
+                    <input type="text" id="label-student-name" class="student-label-input" value="ชื่อ-นามสกุล" placeholder="ป้ายข้อความ เช่น ชื่อ-นามสกุล">
+                  </div>
+                  <div class="field-config-row">
+                    <input type="checkbox" id="show-student-class" checked>
+                    <input type="text" id="label-student-class" class="student-label-input" value="ชั้นเรียน" placeholder="ป้ายข้อความ เช่น ชั้นเรียน">
+                  </div>
+                  <div class="field-config-row">
+                    <input type="checkbox" id="show-student-no" checked>
+                    <input type="text" id="label-student-no" class="student-label-input" value="เลขที่" placeholder="ป้ายข้อความ เช่น เลขที่">
+                  </div>
+                  <div class="field-config-row">
+                    <input type="checkbox" id="show-student-id" checked>
+                    <input type="text" id="label-student-id" class="student-label-input" value="รหัสผู้สอบ" placeholder="ป้ายข้อความ เช่น รหัสประจำตัว">
+                  </div>
+                </div>
+              </div>
+
+              <div class="divider-line"></div>
+
+              <h4 class="form-subtitle">ตั้งค่าตัวเลือกและการสุ่ม</h4>
+              
+              <div class="checkbox-group-column">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="shuffle-questions-checkbox" checked> <strong>สุ่มสลับตำแหน่งข้อสอบ (Shuffle Questions)</strong>
+                </label>
+                <p class="checkbox-desc">สลับลำดับข้อให้ต่างจากคลังข้อสอบดั้งเดิม</p>
+                
+                <label class="checkbox-label">
+                  <input type="checkbox" id="shuffle-options-checkbox" checked> <strong>สุ่มสลับตัวเลือก ก ข ค ง (Shuffle Options)</strong>
+                </label>
+                <p class="checkbox-desc">สลับตำแหน่งของ ก ข ค ง ของแต่ละข้อ (เฉลยข้อสอบจะเปลี่ยนตามตำแหน่งที่ถูกต้องให้อัตโนมัติ)</p>
+              </div>
+
+              <div class="divider-line"></div>
+
+              <h4 class="form-subtitle">กำหนดจำนวนข้อสอบตามหมวดหมู่</h4>
+              <div id="generator-categories-list" class="generator-categories-list">
+                <!-- Dynamically populated with category quantity inputs -->
+                <p class="empty-state">กรุณาเพิ่มหมวดหมู่และข้อสอบก่อนจัดชุด</p>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 20px;">
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                <span>สร้างข้อสอบ & แสดงตัวอย่างก่อนพิมพ์</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: Backup & Restore -->
+      <section id="tab-backup" class="tab-content">
+        <div class="backup-layout">
+          <div class="section-card">
+            <h3 class="section-title">ส่งออกข้อมูลคลังข้อสอบ (Export Backup)</h3>
+            <p class="section-desc">ส่งออกข้อมูลข้อสอบและหมวดหมู่ทั้งหมดในระบบเป็นไฟล์ JSON บันทึกเก็บไว้ในคอมพิวเตอร์ของคุณเพื่อนำไปใช้กับเครื่องอื่นหรือเก็บเพื่อสำรองข้อมูล</p>
+            <button id="export-db-btn" class="btn btn-success">
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>ส่งออกข้อมูลสำรอง (.json)</span>
+            </button>
+          </div>
+
+          <div class="section-card">
+            <h3 class="section-title">นำเข้าข้อมูลคลังข้อสอบ (Import Backup)</h3>
+            <p class="section-desc">นำเข้าไฟล์สำรองข้อสอบ (.json) ที่เคยส่งออกไว้ ข้อมูลใหม่จะถูกนำไปรวมเข้ากับข้อมูลเดิมที่อยู่ในเครื่อง (ข้อมูลที่ ID ซ้ำกันจะอัปเดตทับ)</p>
+            
+            <div class="import-field-group">
+              <input type="file" id="import-db-file" accept=".json" style="display: none;">
+              <button id="import-trigger-btn" class="btn btn-outline">
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span>เลือกไฟล์ JSON สำรอง</span>
+              </button>
+              <span id="import-file-name" class="file-name-text">ไม่ได้เลือกไฟล์ใดๆ</span>
+            </div>
+            
+            <button id="import-db-btn" class="btn btn-primary" style="margin-top: 15px;" disabled>
+              นำเข้าข้อมูลคลังข้อสอบ
+            </button>
+          </div>
+
+          <div class="section-card border-danger">
+            <h3 class="section-title text-danger">ล้างข้อมูลทั้งหมด (Reset Database)</h3>
+            <p class="section-desc">ลบข้อมูลข้อสอบและหมวดหมู่ทั้งหมดในเครื่องของคุณออกจากระบบ ข้อควรระวัง: การดำเนินการนี้ไม่สามารถย้อนกลับได้ กรุณาส่งออกข้อมูลเพื่อสำรองไว้ก่อนดำเนินขั้นตอนนี้</p>
+            <button id="reset-db-btn" class="btn btn-danger">
+              ล้างระบบคลังข้อสอบทั้งหมด
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- PRINT PREVIEW VIEW (ครอบคลุมทั้งหน้าเพื่อจำลองการพิมพ์และรองรับ Print Mode) -->
+  <div id="print-preview-container" class="print-preview-overlay" style="display: none;">
+    <!-- Controls (ซ่อนเมื่อสั่งพิมพ์) -->
+    <div class="preview-controls no-print">
+      <div class="controls-left">
+        <button id="back-to-gen-btn" class="btn btn-outline">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          <span>ย้อนกลับแก้ไข</span>
+        </button>
+        <span class="preview-title" id="preview-exam-name">ข้อสอบตัวอย่าง</span>
+      </div>
+      <div class="controls-center">
+        <button id="toggle-view-exam-btn" class="btn btn-tab active">
+          ดูตัวอย่างกระดาษข้อสอบ
+        </button>
+        <button id="toggle-view-key-btn" class="btn btn-tab">
+          ดูตัวอย่างกระดาษเฉลย
+        </button>
+      </div>
+      <div class="controls-right">
+        <button id="print-exam-btn" class="btn btn-primary btn-lg">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          <strong>สั่งพิมพ์ (Print / PDF)</strong>
+        </button>
+      </div>
+    </div>
+
+    <!-- Paper Canvas for Screen Preview & Print Media Output -->
+    <div id="paper-viewport" class="paper-viewport">
+      <!-- A4 sheets will be injected here dynamically by JavaScript -->
+    </div>
+  </div>
+
+  <!-- QUESTION MODAL (ซ่อนเริ่มต้น) -->
+  <div id="question-modal" class="modal-overlay no-print" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">เขียนข้อสอบใหม่</h3>
+        <button id="modal-close-btn" class="modal-close">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form id="question-form" class="modal-body form-grid">
+        <input type="hidden" id="edit-question-id" value="">
+        
+        <div class="form-group">
+          <label for="question-category-select">หมวดหมู่ข้อสอบ <span class="required">*</span></label>
+          <select id="question-category-select" required>
+            <option value="" disabled selected>-- เลือกหมวดหมู่ --</option>
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="question-text-input">โจทย์คำถาม <span class="required">*</span></label>
+          <textarea id="question-text-input" rows="4" placeholder="กรอกคำถามโจทย์ข้อสอบที่นี่..." required></textarea>
+          <div id="duplicate-warning" style="display: none; color: var(--danger-color); font-size: 0.85rem; margin-top: 6px; font-weight: 500; line-height: 1.4;">
+            ⚠️ คำถามนี้มีอยู่แล้วในระบบคลังข้อสอบ (พบในหมวดหมู่: <span id="duplicate-warning-cat"></span>)
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>รูปภาพประกอบโจทย์ (ไม่จำเป็นต้องมี)</label>
+          <div class="image-upload-wrapper">
+            <input type="file" id="question-image-input" accept="image/*" style="display: none;">
+            <button type="button" id="image-upload-trigger" class="btn btn-outline btn-block">
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span>เลือกรูปภาพประกอบ</span>
+            </button>
+            <div id="image-preview-container" class="image-preview" style="display: none;">
+              <img id="image-preview-element" src="" alt="โจทย์รูปภาพประกอบ">
+              <button type="button" id="remove-image-btn" class="remove-img-btn" title="ลบรูปภาพ">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider-line"></div>
+
+        <h4 class="form-subtitle">ตัวเลือกข้อสอบและเฉลยคำตอบที่ถูกต้อง <span class="required">*</span></h4>
+        
+        <div class="options-inputs-grid">
+          <!-- Option A -->
+          <div class="option-row">
+            <span class="option-label text-bold">ก.</span>
+            <input type="text" id="option-a-input" placeholder="คำตอบตัวเลือก ก." required>
+            <label class="radio-choice-label" title="เฉลยคำตอบ ก.">
+              <input type="radio" name="correct-option-radio" value="A" required> เฉลย
+            </label>
+          </div>
+          <!-- Option B -->
+          <div class="option-row">
+            <span class="option-label text-bold">ข.</span>
+            <input type="text" id="option-b-input" placeholder="คำตอบตัวเลือก ข." required>
+            <label class="radio-choice-label" title="เฉลยคำตอบ ข.">
+              <input type="radio" name="correct-option-radio" value="B"> เฉลย
+            </label>
+          </div>
+          <!-- Option C -->
+          <div class="option-row">
+            <span class="option-label text-bold">ค.</span>
+            <input type="text" id="option-c-input" placeholder="คำตอบตัวเลือก ค." required>
+            <label class="radio-choice-label" title="เฉลยคำตอบ ค.">
+              <input type="radio" name="correct-option-radio" value="C"> เฉลย
+            </label>
+          </div>
+          <!-- Option D -->
+          <div class="option-row">
+            <span class="option-label text-bold">ง.</span>
+            <input type="text" id="option-d-input" placeholder="คำตอบตัวเลือก ง." required>
+            <label class="radio-choice-label" title="เฉลยคำตอบ ง.">
+              <input type="radio" name="correct-option-radio" value="D"> เฉลย
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="modal-cancel-btn" class="btn btn-outline">ยกเลิก</button>
+          <button type="submit" class="btn btn-primary">บันทึกข้อสอบ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js?v=1.0.7"></script>
+</body>
+</html>

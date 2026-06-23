@@ -1,0 +1,16 @@
+{
+  "name": "exam-bank",
+  "version": "1.0.0",
+  "description": "ระบบคลังข้อสอบและพิมพ์ข้อสอบ A4",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx http-server -p 8080 -o"
+  },
+  "keywords": [
+    "exam-bank",
+    "a4-print",
+    "indexeddb"
+  ],
+  "author": "",
+  "license": "ISC"
+}

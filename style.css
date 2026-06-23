@@ -1202,6 +1202,18 @@ body {
   flex-shrink: 0;
 }
 
+.preview-controls .btn-outline {
+  border-color: #475569;
+  color: #e2e8f0;
+  background-color: transparent;
+}
+
+.preview-controls .btn-outline:hover {
+  background-color: #1e293b;
+  border-color: #64748b;
+  color: #ffffff;
+}
+
 .controls-left {
   display: flex;
   align-items: center;

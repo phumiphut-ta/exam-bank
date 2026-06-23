@@ -15,6 +15,7 @@ let activeTab = 'dashboard';
 let editingQuestionId = null;
 let currentQuestionImageBase64 = null;
 let generatedExamQuestions = [];
+let generatedExamSets = [];
 
 // DOM Elements
 const sidebarButtons = document.querySelectorAll('.nav-btn');
@@ -732,50 +733,69 @@ generatorForm.addEventListener('submit', function(e) {
     return;
   }
 
-  // Shuffle all selected questions if enabled
-  if (shuffleQuestions) {
-    selectedPool = shuffleArray(selectedPool);
-  }
+  const setCountSelect = document.getElementById('exam-set-count-select');
+  const setCount = setCountSelect ? parseInt(setCountSelect.value) : 1;
 
-  // Process choices and correct answers for each question
-  generatedExamQuestions = selectedPool.map((q, index) => {
-    const originalOptions = [
-      { key: 'A', text: q.optionA, label: 'ก' },
-      { key: 'B', text: q.optionB, label: 'ข' },
-      { key: 'C', text: q.optionC, label: 'ค' },
-      { key: 'D', text: q.optionD, label: 'ง' }
-    ];
+  generatedExamSets = [];
+  const setLetters = ['A', 'B', 'C', 'D'];
 
-    let finalOptions = [...originalOptions];
-    let finalCorrectLabel = '';
-
-    if (shuffleOptions) {
-      finalOptions = shuffleArray(finalOptions);
+  for (let s = 0; s < setCount; s++) {
+    const setName = setLetters[s];
+    
+    // We shuffle the selected pool for each set (if shuffleQuestions is checked or for sets B/C/D to keep them distinct)
+    let setQuestions = [...selectedPool];
+    if (shuffleQuestions || s > 0) {
+      setQuestions = shuffleArray(setQuestions);
     }
 
-    // Assign ก, ข, ค, ง labels based on final shuffled array position
-    const thaiLabels = ['ก', 'ข', 'ค', 'ง'];
-    finalOptions = finalOptions.map((opt, i) => {
+    // Process choices and correct answers for each question in this set
+    const processedQuestions = setQuestions.map((q, index) => {
+      const originalOptions = [
+        { key: 'A', text: q.optionA, label: 'ก' },
+        { key: 'B', text: q.optionB, label: 'ข' },
+        { key: 'C', text: q.optionC, label: 'ค' },
+        { key: 'D', text: q.optionD, label: 'ง' }
+      ];
+
+      let finalOptions = [...originalOptions];
+      let finalCorrectLabel = '';
+
+      if (shuffleOptions) {
+        finalOptions = shuffleArray(finalOptions);
+      }
+
+      // Assign ก, ข, ค, ง labels based on final shuffled array position
+      const thaiLabels = ['ก', 'ข', 'ค', 'ง'];
+      finalOptions = finalOptions.map((opt, i) => {
+        return {
+          originalKey: opt.key,
+          text: opt.text,
+          label: thaiLabels[i]
+        };
+      });
+
+      // Find the new Thai label of the correct choice
+      const correctOpt = finalOptions.find(opt => opt.originalKey === q.correctAnswer);
+      finalCorrectLabel = correctOpt ? correctOpt.label : '';
+
       return {
-        originalKey: opt.key,
-        text: opt.text,
-        label: thaiLabels[i]
+        id: q.id,
+        num: index + 1,
+        questionText: q.questionText,
+        image: q.image,
+        options: finalOptions,
+        correctLabel: finalCorrectLabel
       };
     });
 
-    // Find the new Thai label of the correct choice
-    const correctOpt = finalOptions.find(opt => opt.originalKey === q.correctAnswer);
-    finalCorrectLabel = correctOpt ? correctOpt.label : '';
+    generatedExamSets.push({
+      setName: setName,
+      questions: processedQuestions
+    });
+  }
 
-    return {
-      id: q.id,
-      num: index + 1,
-      questionText: q.questionText,
-      image: q.image,
-      options: finalOptions,
-      correctLabel: finalCorrectLabel
-    };
-  });
+  // Set generatedExamQuestions to Set A's questions for backwards compatibility
+  generatedExamQuestions = generatedExamSets[0].questions;
 
   // Open Preview Container and render initial view (Exam Sheet)
   previewExamName.textContent = title;
@@ -787,6 +807,30 @@ generatorForm.addEventListener('submit', function(e) {
   const previewImageSizeSelectElement = document.getElementById('preview-image-size-select');
   if (previewImageSizeSelectElement) {
     previewImageSizeSelectElement.value = imageSizeVal;
+  }
+
+  // Setup preview set filter dropdown visibility and options
+  const previewSetFilterLabel = document.getElementById('preview-set-filter-label');
+  const previewSetFilterSelect = document.getElementById('preview-set-filter-select');
+  
+  if (previewSetFilterLabel && previewSetFilterSelect) {
+    if (setCount > 1) {
+      previewSetFilterLabel.style.display = 'inline';
+      previewSetFilterSelect.style.display = 'inline';
+      
+      // Rebuild options based on actual sets generated
+      previewSetFilterSelect.innerHTML = '<option value="all" selected>ทุกชุดข้อสอบ (All)</option>';
+      for (let s = 0; s < setCount; s++) {
+        const setName = setLetters[s];
+        const opt = document.createElement('option');
+        opt.value = setName;
+        opt.textContent = `ชุดข้อสอบ ${setName}`;
+        previewSetFilterSelect.appendChild(opt);
+      }
+    } else {
+      previewSetFilterLabel.style.display = 'none';
+      previewSetFilterSelect.style.display = 'none';
+    }
   }
 
   // View: Exam (Default)
@@ -833,129 +877,164 @@ function renderExamPreview(title, instructions) {
   else if (imageSize === 'large') imgHeightBudget = 450;
   else if (imageSize === 'xlarge') imgHeightBudget = 600;
 
-  // Pagination parameters
-  const PAGE_HEIGHT_BUDGET = 920; // Safe height in px for 210x297mm page (minus padding)
-  const HEADER_ESTIMATED_HEIGHT = 160; // Estimated height of header block on page 1
-  
-  let currentPageQuestions = [];
-  let currentAccumulatedHeight = 0;
-  const examPages = [];
+  // Get set filter setting
+  const setFilterSelect = document.getElementById('preview-set-filter-select');
+  const setFilter = setFilterSelect ? setFilterSelect.value : 'all';
 
-  // Step 1: Divide questions into pages based on estimated rendering height
-  generatedExamQuestions.forEach((q, index) => {
-    const isFirstPage = examPages.length === 0;
-    const pageBudget = isFirstPage ? (PAGE_HEIGHT_BUDGET - HEADER_ESTIMATED_HEIGHT) : PAGE_HEIGHT_BUDGET;
-
-    // Estimate height of this question block
-    // Text lines: assuming ~60 characters of Thai per line
-    const textLines = Math.ceil(q.questionText.length / 55) || 1;
-    let estimatedHeight = (textLines * 24) + 20; // base text height + margins
-
-    // Image height
-    if (q.image) {
-      estimatedHeight += imgHeightBudget; // height of image preview box + margin
-    }
-
-    // Options height
-    // Check if options are long. If any option is > 25 chars, we render single-column
-    const isSingleColumn = q.options.some(opt => opt.text.length > 25);
-    if (isSingleColumn) {
-      estimatedHeight += 105; // 4 rows
-    } else {
-      estimatedHeight += 55;  // 2 rows
-    }
-
-    // Add extra padding margin
-    estimatedHeight += 15;
-
-    // If adding this question exceeds the page budget, push current page and start a new one
-    if (currentAccumulatedHeight + estimatedHeight > pageBudget && currentPageQuestions.length > 0) {
-      examPages.push(currentPageQuestions);
-      currentPageQuestions = [q];
-      currentAccumulatedHeight = estimatedHeight;
-    } else {
-      currentPageQuestions.push(q);
-      currentAccumulatedHeight += estimatedHeight;
-    }
-  });
-
-  // Push the final remaining questions
-  if (currentPageQuestions.length > 0) {
-    examPages.push(currentPageQuestions);
+  // Filter generatedExamSets
+  let setsToRender = [];
+  if (setFilter === 'all') {
+    setsToRender = generatedExamSets;
+  } else {
+    const match = generatedExamSets.find(s => s.setName === setFilter);
+    if (match) setsToRender = [match];
   }
 
-  // Step 2: Render A4 Pages to DOM
-  const totalPages = examPages.length;
+  if (setsToRender.length === 0) {
+    // If no sets are generated (or empty), fallback to generatedExamQuestions as a single set
+    setsToRender = [{ setName: 'A', questions: generatedExamQuestions }];
+  }
 
-  examPages.forEach((pageQuestions, pageIndex) => {
-    const pageNum = pageIndex + 1;
-    const a4Page = document.createElement('div');
-    a4Page.className = 'a4-page';
+  const totalSets = generatedExamSets.length;
 
-    // 1. Header (Page 1 only)
-    if (pageNum === 1) {
-      const headerSection = document.createElement('div');
-      headerSection.className = 'exam-header-section';
-      
-      let studentInfoHTML = '';
-      if (showName || showClass || showNo || showId) {
-        studentInfoHTML += '<div class="student-info-row">';
-        if (showName) studentInfoHTML += `<div class="student-field"><span class="field-label">${escapeHTML(labelName)}:</span><span class="field-value" contenteditable="true">&nbsp;</span></div>`;
-        if (showClass) studentInfoHTML += `<div class="student-field"><span class="field-label">${escapeHTML(labelClass)}:</span><span class="field-value" contenteditable="true">&nbsp;</span></div>`;
-        if (showNo) studentInfoHTML += `<div class="student-field"><span class="field-label">${escapeHTML(labelNo)}:</span><span class="field-value" contenteditable="true">&nbsp;</span></div>`;
-        if (showId) studentInfoHTML += `<div class="student-field"><span class="field-label">${escapeHTML(labelId)}:</span><span class="field-value" contenteditable="true">&nbsp;</span></div>`;
-        studentInfoHTML += '</div>';
-      }
+  // Render each set consecutively
+  setsToRender.forEach(set => {
+    const setName = set.setName;
+    const setQuestions = set.questions;
+    
+    // Pagination parameters
+    const PAGE_HEIGHT_BUDGET = 920; // Safe height in px for 210x297mm page (minus padding)
+    const HEADER_ESTIMATED_HEIGHT = 160; // Estimated height of header block on page 1
+    
+    let currentPageQuestions = [];
+    let currentAccumulatedHeight = 0;
+    const examPages = [];
 
-      headerSection.innerHTML = `
-        <div class="exam-title-display" contenteditable="true">${escapeHTML(title)}</div>
-        ${studentInfoHTML}
-        ${instructions ? `<div class="exam-instructions-display" contenteditable="true">${escapeHTML(instructions)}</div>` : ''}
-      `;
-      a4Page.appendChild(headerSection);
-    }
+    // Step 1: Divide questions into pages based on estimated rendering height
+    setQuestions.forEach((q, index) => {
+      const isFirstPage = examPages.length === 0;
+      const pageBudget = isFirstPage ? (PAGE_HEIGHT_BUDGET - HEADER_ESTIMATED_HEIGHT) : PAGE_HEIGHT_BUDGET;
 
-    // 2. Questions
-    const questionsContainer = document.createElement('div');
-    questionsContainer.className = 'exam-questions-list';
+      // Estimate height of this question block
+      // Text lines: assuming ~60 characters of Thai per line
+      const textLines = Math.ceil(q.questionText.length / 55) || 1;
+      let estimatedHeight = (textLines * 24) + 20; // base text height + margins
 
-    pageQuestions.forEach(q => {
-      const qItem = document.createElement('div');
-      qItem.className = 'exam-q-item';
-      
-      let imgHTML = '';
+      // Image height
       if (q.image) {
-        imgHTML = `<img class="exam-q-img img-size-${imageSize}" src="${q.image}" alt="รูปประกอบข้อ ${q.num}">`;
+        estimatedHeight += imgHeightBudget; // height of image preview box + margin
       }
 
-      // Single column check
+      // Options height
+      // Check if options are long. If any option is > 25 chars, we render single-column
       const isSingleColumn = q.options.some(opt => opt.text.length > 25);
-      const choicesClass = isSingleColumn ? 'exam-q-choices single-column' : 'exam-q-choices';
+      if (isSingleColumn) {
+        estimatedHeight += 105; // 4 rows
+      } else {
+        estimatedHeight += 55;  // 2 rows
+      }
 
-      qItem.innerHTML = `
-        <div class="exam-q-text">
-          <span class="q-num">${q.num}.</span>
-          <span>${escapeHTML(q.questionText)}</span>
-        </div>
-        ${imgHTML}
-        <div class="${choicesClass}">
-          ${q.options.map(opt => `
-            <div class="choice-item">${opt.label}. ${escapeHTML(opt.text)}</div>
-          `).join('')}
-        </div>
-      `;
-      questionsContainer.appendChild(qItem);
+      // Add extra padding margin
+      estimatedHeight += 15;
+
+      // If adding this question exceeds the page budget, push current page and start a new one
+      if (currentAccumulatedHeight + estimatedHeight > pageBudget && currentPageQuestions.length > 0) {
+        examPages.push(currentPageQuestions);
+        currentPageQuestions = [q];
+        currentAccumulatedHeight = estimatedHeight;
+      } else {
+        currentPageQuestions.push(q);
+        currentAccumulatedHeight += estimatedHeight;
+      }
     });
 
-    a4Page.appendChild(questionsContainer);
+    // Push the final remaining questions
+    if (currentPageQuestions.length > 0) {
+      examPages.push(currentPageQuestions);
+    }
 
-    // 3. Footer (Page numbers)
-    const footer = document.createElement('div');
-    footer.className = 'a4-page-footer';
-    footer.textContent = `หน้า ${pageNum} จาก ${totalPages}`;
-    a4Page.appendChild(footer);
+    // Step 2: Render A4 Pages to DOM
+    const totalPages = examPages.length;
 
-    paperViewport.appendChild(a4Page);
+    examPages.forEach((pageQuestions, pageIndex) => {
+      const pageNum = pageIndex + 1;
+      const a4Page = document.createElement('div');
+      a4Page.className = 'a4-page';
+
+      // 1. Header (Page 1 only)
+      if (pageNum === 1) {
+        const headerSection = document.createElement('div');
+        headerSection.className = 'exam-header-section';
+        
+        let studentInfoHTML = '';
+        if (showName || showClass || showNo || showId || totalSets > 1) {
+          studentInfoHTML += '<div class="student-info-row">';
+          if (showName) studentInfoHTML += `<div class="student-field"><span class="field-label">${escapeHTML(labelName)}:</span><span class="field-value" contenteditable="true">&nbsp;</span></div>`;
+          if (showClass) studentInfoHTML += `<div class="student-field"><span class="field-label">${escapeHTML(labelClass)}:</span><span class="field-value" contenteditable="true">&nbsp;</span></div>`;
+          if (showNo) studentInfoHTML += `<div class="student-field"><span class="field-label">${escapeHTML(labelNo)}:</span><span class="field-value" contenteditable="true">&nbsp;</span></div>`;
+          if (showId) studentInfoHTML += `<div class="student-field"><span class="field-label">${escapeHTML(labelId)}:</span><span class="field-value" contenteditable="true">&nbsp;</span></div>`;
+          
+          // Display set identifier if more than 1 set is generated
+          if (totalSets > 1) {
+            studentInfoHTML += `<div class="student-field" style="flex-grow: 1.5; min-width: 85px;"><span class="field-label" style="color: #0284c7;">ชุดข้อสอบ:</span><span class="field-value" style="font-weight: bold; border-bottom: none; color: #0284c7; padding-left: 5px;">${setName}</span></div>`;
+          }
+          studentInfoHTML += '</div>';
+        }
+
+        headerSection.innerHTML = `
+          <div class="exam-title-display" contenteditable="true">${escapeHTML(title)}</div>
+          ${studentInfoHTML}
+          ${instructions ? `<div class="exam-instructions-display" contenteditable="true">${escapeHTML(instructions)}</div>` : ''}
+        `;
+        a4Page.appendChild(headerSection);
+      }
+
+      // 2. Questions
+      const questionsContainer = document.createElement('div');
+      questionsContainer.className = 'exam-questions-list';
+
+      pageQuestions.forEach(q => {
+        const qItem = document.createElement('div');
+        qItem.className = 'exam-q-item';
+        
+        let imgHTML = '';
+        if (q.image) {
+          imgHTML = `<img class="exam-q-img img-size-${imageSize}" src="${q.image}" alt="รูปประกอบข้อ ${q.num}">`;
+        }
+
+        // Single column check
+        const isSingleColumn = q.options.some(opt => opt.text.length > 25);
+        const choicesClass = isSingleColumn ? 'exam-q-choices single-column' : 'exam-q-choices';
+
+        qItem.innerHTML = `
+          <div class="exam-q-text">
+            <span class="q-num">${q.num}.</span>
+            <span>${escapeHTML(q.questionText)}</span>
+          </div>
+          ${imgHTML}
+          <div class="${choicesClass}">
+            ${q.options.map(opt => `
+              <div class="choice-item">${opt.label}. ${escapeHTML(opt.text)}</div>
+            `).join('')}
+          </div>
+        `;
+        questionsContainer.appendChild(qItem);
+      });
+
+      a4Page.appendChild(questionsContainer);
+
+      // 3. Footer (Page numbers)
+      const footer = document.createElement('div');
+      footer.className = 'a4-page-footer';
+      let pageFooterText = `หน้า ${pageNum} จาก ${totalPages}`;
+      if (totalSets > 1) {
+        pageFooterText = `ชุดข้อสอบ ${setName} - หน้า ${pageNum} จาก ${totalPages}`;
+      }
+      footer.textContent = pageFooterText;
+      a4Page.appendChild(footer);
+
+      paperViewport.appendChild(a4Page);
+    });
   });
 }
 
@@ -963,60 +1042,94 @@ function renderExamPreview(title, instructions) {
 function renderAnswerKeyPreview(title) {
   paperViewport.innerHTML = '';
 
-  const answersPool = generatedExamQuestions.map(q => {
-    return {
-      num: q.num,
-      correctLabel: q.correctLabel
-    };
-  });
+  // Get set filter setting
+  const setFilterSelect = document.getElementById('preview-set-filter-select');
+  const setFilter = setFilterSelect ? setFilterSelect.value : 'all';
 
-  // Calculate items per page (approx 80-100 items can fit on one page in 5 columns)
-  const ITEMS_PER_PAGE = 80;
-  const keyPages = [];
-  
-  for (let i = 0; i < answersPool.length; i += ITEMS_PER_PAGE) {
-    keyPages.push(answersPool.slice(i, i + ITEMS_PER_PAGE));
+  // Filter generatedExamSets
+  let setsToRender = [];
+  if (setFilter === 'all') {
+    setsToRender = generatedExamSets;
+  } else {
+    const match = generatedExamSets.find(s => s.setName === setFilter);
+    if (match) setsToRender = [match];
   }
 
-  const totalPages = keyPages.length;
+  if (setsToRender.length === 0) {
+    setsToRender = [{ setName: 'A', questions: generatedExamQuestions }];
+  }
 
-  keyPages.forEach((pageAnswers, pageIndex) => {
-    const pageNum = pageIndex + 1;
-    const a4Page = document.createElement('div');
-    a4Page.className = 'a4-page';
+  const totalSets = generatedExamSets.length;
 
-    // Header
-    const headerSection = document.createElement('div');
-    headerSection.className = 'key-header-section';
-    headerSection.innerHTML = `
-      <div class="key-header-title">เฉลยคำตอบข้อสอบ</div>
-      <div class="key-header-subtitle">${escapeHTML(title)}</div>
-    `;
-    a4Page.appendChild(headerSection);
+  setsToRender.forEach(set => {
+    const setName = set.setName;
+    const setQuestions = set.questions;
 
-    // Answer grid (Compact layout)
-    const grid = document.createElement('div');
-    grid.className = 'key-compact-grid';
-    
-    pageAnswers.forEach(ans => {
-      const item = document.createElement('div');
-      item.className = 'key-compact-item';
-      item.innerHTML = `
-        <span class="key-num">ข้อ ${ans.num}</span>
-        <span class="key-ans">${escapeHTML(ans.correctLabel)}</span>
-      `;
-      grid.appendChild(item);
+    const answersPool = setQuestions.map(q => {
+      return {
+        num: q.num,
+        correctLabel: q.correctLabel
+      };
     });
 
-    a4Page.appendChild(grid);
+    // Calculate items per page (approx 80-100 items can fit on one page in 5 columns)
+    const ITEMS_PER_PAGE = 80;
+    const keyPages = [];
+    
+    for (let i = 0; i < answersPool.length; i += ITEMS_PER_PAGE) {
+      keyPages.push(answersPool.slice(i, i + ITEMS_PER_PAGE));
+    }
 
-    // Footer
-    const footer = document.createElement('div');
-    footer.className = 'a4-page-footer';
-    footer.textContent = `เฉลยคำตอบ - หน้า ${pageNum} จาก ${totalPages}`;
-    a4Page.appendChild(footer);
+    const totalPages = keyPages.length;
 
-    paperViewport.appendChild(a4Page);
+    keyPages.forEach((pageAnswers, pageIndex) => {
+      const pageNum = pageIndex + 1;
+      const a4Page = document.createElement('div');
+      a4Page.className = 'a4-page';
+
+      // Header
+      const headerSection = document.createElement('div');
+      headerSection.className = 'key-header-section';
+      
+      let subtitleText = title;
+      if (totalSets > 1) {
+        subtitleText = `${title} (ชุดข้อสอบ ${setName})`;
+      }
+
+      headerSection.innerHTML = `
+        <div class="key-header-title">เฉลยคำตอบข้อสอบ</div>
+        <div class="key-header-subtitle">${escapeHTML(subtitleText)}</div>
+      `;
+      a4Page.appendChild(headerSection);
+
+      // Answer grid (Compact layout)
+      const grid = document.createElement('div');
+      grid.className = 'key-compact-grid';
+      
+      pageAnswers.forEach(ans => {
+        const item = document.createElement('div');
+        item.className = 'key-compact-item';
+        item.innerHTML = `
+          <span class="key-num">ข้อ ${ans.num}</span>
+          <span class="key-ans">${escapeHTML(ans.correctLabel)}</span>
+        `;
+        grid.appendChild(item);
+      });
+
+      a4Page.appendChild(grid);
+
+      // Footer
+      const footer = document.createElement('div');
+      footer.className = 'a4-page-footer';
+      let pageFooterText = `เฉลยคำตอบ - หน้า ${pageNum} จาก ${totalPages}`;
+      if (totalSets > 1) {
+        pageFooterText = `เฉลยคำตอบ ชุดข้อสอบ ${setName} - หน้า ${pageNum} จาก ${totalPages}`;
+      }
+      footer.textContent = pageFooterText;
+      a4Page.appendChild(footer);
+
+      paperViewport.appendChild(a4Page);
+    });
   });
 }
 
@@ -1203,6 +1316,24 @@ if (previewImageSizeSelect) {
       examImageSizeSelect.value = newVal;
     }
     
+    // Regenerate preview
+    const title = document.getElementById('exam-title-input').value.trim();
+    const instructions = document.getElementById('exam-instructions-input').value.trim();
+    
+    // Determine which view is active (Exam or Key)
+    const isExamView = toggleViewExamBtn.classList.contains('active');
+    if (isExamView) {
+      renderExamPreview(title, instructions);
+    } else {
+      renderAnswerKeyPreview(title);
+    }
+  });
+}
+
+// Handle set filter changes directly in Print Preview
+const previewSetFilterSelect = document.getElementById('preview-set-filter-select');
+if (previewSetFilterSelect) {
+  previewSetFilterSelect.addEventListener('change', function() {
     // Regenerate preview
     const title = document.getElementById('exam-title-input').value.trim();
     const instructions = document.getElementById('exam-instructions-input').value.trim();

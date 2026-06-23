@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ระบบคลังข้อสอบอัจฉริยะ (exam-bank)</title>
-  <link rel="icon" type="image/png" href="favicon.png?v=1.3.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="favicon.png?v=1.3.0">
+  <link rel="icon" type="image/png" href="favicon.png?v=1.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="favicon.png?v=1.4.0">
   <!-- Google Fonts: Sarabun for Thai document/exam layout, Outfit for modern UI -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.3.0">
+  <link rel="stylesheet" href="style.css?v=1.4.0">
 </head>
 <body>
 
@@ -278,6 +278,17 @@
                 <p class="checkbox-desc" style="margin-left: 0; margin-top: 4px;">ปรับขนาดรูปภาพประกอบเพื่อให้อ่านออกและคมชัดเต็มที่ขณะพิมพ์</p>
               </div>
 
+              <div class="form-group" style="margin-top: 15px;">
+                <label for="exam-set-count-select">จำนวนชุดข้อสอบที่ต้องการจัดทำ</label>
+                <select id="exam-set-count-select" style="padding: 10px 16px; border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary); border-radius: var(--radius-md); font-family: var(--font-ui); font-size: 0.95rem; transition: var(--transition); cursor: pointer;">
+                  <option value="1" selected>1 ชุด (ชุด A)</option>
+                  <option value="2">2 ชุด (ชุด A, B)</option>
+                  <option value="3">3 ชุด (ชุด A, B, C)</option>
+                  <option value="4">4 ชุด (ชุด A, B, C, D)</option>
+                </select>
+                <p class="checkbox-desc" style="margin-left: 0; margin-top: 4px;">ระบบจะสร้างข้อสอบที่มีคำถามกลุ่มเดียวกัน แต่สุ่มลำดับข้อและตัวเลือกสลับกันในแต่ละชุดแยกเป็นอิสระ</p>
+              </div>
+
               <div class="divider-line"></div>
 
               <h4 class="form-subtitle">กำหนดจำนวนข้อสอบตามหมวดหมู่</h4>
@@ -362,6 +373,14 @@
           <option value="medium">กลาง (320px)</option>
           <option value="large" selected>ใหญ่ (450px)</option>
           <option value="xlarge">ใหญ่มาก (600px)</option>
+        </select>
+        <span id="preview-set-filter-label" style="color: #94a3b8; font-size: 0.9rem; margin-left: 15px; display: none;">แสดงชุดข้อสอบ:</span>
+        <select id="preview-set-filter-select" style="padding: 6px 12px; background-color: #1e293b; color: white; border: 1px solid #334155; border-radius: var(--radius-sm); font-size: 0.9rem; font-family: var(--font-ui); cursor: pointer; display: none;">
+          <option value="all" selected>ทุกชุดข้อสอบ (All)</option>
+          <option value="A">ชุดข้อสอบ A</option>
+          <option value="B">ชุดข้อสอบ B</option>
+          <option value="C">ชุดข้อสอบ C</option>
+          <option value="D">ชุดข้อสอบ D</option>
         </select>
       </div>
       <div class="controls-right">
@@ -470,6 +489,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=1.3.0"></script>
+  <script src="app.js?v=1.4.0"></script>
 </body>
 </html>

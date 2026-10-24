@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.5.3">
+  <link rel="stylesheet" href="style.css?v=1.5.4">
 </head>
 <body>
 
@@ -537,6 +537,46 @@
     </div>
   </div>
 
-  <script src="app.js?v=1.5.3"></script>
+  <!-- IMPORT BACKUP CONFIRMATION MODAL -->
+  <div id="import-modal" class="modal-overlay no-print" style="display: none;">
+    <div class="modal-content modal-content-sm">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <svg style="color: var(--primary-color); width: 24px; height: 24px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <h3 style="font-size: 1.15rem; margin: 0;">ยืนยันการนำเข้าข้อมูล</h3>
+        </div>
+        <button type="button" id="import-modal-close-btn" class="modal-close">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body form-grid" style="padding: 20px 24px;">
+        <p style="color: var(--text-secondary); line-height: 1.5; font-size: 0.95rem; margin: 0;">
+          ตรวจพบข้อมูลในไฟล์สำรองที่คุณเลือก ระบบจะนำข้อมูลนี้ไปรวมเข้ากับคลังข้อสอบในเครื่องของคุณ:
+        </p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+          <div style="background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; text-align: center;">
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">หมวดหมู่ที่จะนำเข้า</div>
+            <div id="import-cat-count" style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color); margin-top: 4px;">0</div>
+          </div>
+          <div style="background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; text-align: center;">
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">ข้อสอบที่จะนำเข้า</div>
+            <div id="import-q-count" style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color); margin-top: 4px;">0</div>
+          </div>
+        </div>
+        <p style="color: var(--text-muted, #94a3b8); font-size: 0.82rem; margin: 10px 0 0 0; line-height: 1.4;">
+          💡 ข้อสอบและหมวดหมู่ที่มี ID ซ้ำกับในเครื่องจะถูกอัปเดตทับด้วยข้อมูลใหม่จากไฟล์
+        </p>
+      </div>
+      <div class="modal-footer" style="padding: 16px 24px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border-color);">
+        <button type="button" id="import-modal-cancel-btn" class="btn btn-outline">ยกเลิก</button>
+        <button type="button" id="import-modal-confirm-btn" class="btn btn-primary">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>ยืนยันนำเข้าข้อมูล</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=1.5.4"></script>
 </body>
 </html>

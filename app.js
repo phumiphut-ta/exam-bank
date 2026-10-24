@@ -1394,13 +1394,43 @@ importDbFile.addEventListener('change', function(e) {
   }
 });
 
-// Import JSON file data into database
+// Import JSON file data into database with In-App Confirmation Modal
+const importModal = document.getElementById('import-modal');
+const importModalCloseBtn = document.getElementById('import-modal-close-btn');
+const importModalCancelBtn = document.getElementById('import-modal-cancel-btn');
+const importModalConfirmBtn = document.getElementById('import-modal-confirm-btn');
+const importCatCount = document.getElementById('import-cat-count');
+const importQCount = document.getElementById('import-q-count');
+let pendingImportData = null;
+
+function closeImportModal() {
+  if (importModal) importModal.style.display = 'none';
+  pendingImportData = null;
+}
+
+if (importModalCloseBtn) importModalCloseBtn.addEventListener('click', closeImportModal);
+if (importModalCancelBtn) importModalCancelBtn.addEventListener('click', closeImportModal);
+
+// Close on backdrop mousedown+mouseup
+let importModalBackdropDown = false;
+if (importModal) {
+  importModal.addEventListener('mousedown', (e) => {
+    importModalBackdropDown = (e.target === importModal);
+  });
+  importModal.addEventListener('mouseup', (e) => {
+    if (importModalBackdropDown && e.target === importModal) {
+      closeImportModal();
+    }
+    importModalBackdropDown = false;
+  });
+}
+
 importDbBtn.addEventListener('click', function() {
   const file = importDbFile.files[0];
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = async function(event) {
+  reader.onload = function(event) {
     try {
       const data = JSON.parse(event.target.result);
       
@@ -1410,33 +1440,51 @@ importDbBtn.addEventListener('click', function() {
         return;
       }
 
-      if (confirm(`คุณต้องการนำเข้าหมวดหมู่จำนวน ${data.categories.length} รายการ และข้อสอบจำนวน ${data.questions.length} รายการ หรือไม่?`)) {
-        // Import categories
-        for (const cat of data.categories) {
-          await updateData('categories', cat);
-        }
-
-        // Import questions
-        for (const q of data.questions) {
-          await updateData('questions', q);
-        }
-
-        showToast(`นำเข้าหมวดหมู่ ${data.categories.length} รายการ และข้อสอบ ${data.questions.length} รายการ สำเร็จ!`, 'success');
-        
-        // Reset file inputs
-        importDbFile.value = '';
-        importFileName.textContent = 'ไม่ได้เลือกไฟล์ใดๆ';
-        importDbBtn.disabled = true;
-
-        await refreshData();
-        switchTab('dashboard');
-      }
+      pendingImportData = data;
+      if (importCatCount) importCatCount.textContent = data.categories.length;
+      if (importQCount) importQCount.textContent = data.questions.length;
+      if (importModal) importModal.style.display = 'flex';
     } catch (err) {
       showToast('ไม่สามารถอ่านไฟล์ได้ รูปแบบ JSON ไม่ถูกต้อง: ' + err, 'danger');
     }
   };
   reader.readAsText(file);
 });
+
+if (importModalConfirmBtn) {
+  importModalConfirmBtn.addEventListener('click', async function() {
+    if (!pendingImportData) return;
+    const data = pendingImportData;
+
+    try {
+      importModalConfirmBtn.disabled = true;
+      // Import categories
+      for (const cat of data.categories) {
+        await updateData('categories', cat);
+      }
+
+      // Import questions
+      for (const q of data.questions) {
+        await updateData('questions', q);
+      }
+
+      closeImportModal();
+      showToast(`นำเข้าหมวดหมู่ ${data.categories.length} รายการ และข้อสอบ ${data.questions.length} รายการ สำเร็จ!`, 'success');
+
+      // Reset file inputs
+      importDbFile.value = '';
+      importFileName.textContent = 'ไม่ได้เลือกไฟล์ใดๆ';
+      importDbBtn.disabled = true;
+
+      await refreshData();
+      switchTab('dashboard');
+    } catch (err) {
+      showToast('เกิดข้อผิดพลาดระหว่างนำเข้าข้อมูล: ' + err, 'danger');
+    } finally {
+      importModalConfirmBtn.disabled = false;
+    }
+  });
+}
 
 // Reset Database Modal Handling
 const resetDbBtn = document.getElementById('reset-db-btn');

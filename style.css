@@ -1156,6 +1156,10 @@ body {
   animation: modalSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.modal-content.modal-content-sm {
+  max-width: 480px;
+}
+
 @keyframes modalSlide {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
@@ -1167,6 +1171,10 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.modal-header.border-danger {
+  border-bottom: 2px solid var(--danger-color) !important;
 }
 
 .modal-close {

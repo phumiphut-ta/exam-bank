@@ -1438,22 +1438,78 @@ importDbBtn.addEventListener('click', function() {
   reader.readAsText(file);
 });
 
-// Reset Database completely
-document.getElementById('reset-db-btn').addEventListener('click', async function() {
-  const code = prompt('หากต้องการลบข้อมูลทั้งหมดถาวร กรุณาพิมพ์คำว่า "RESET" เพื่อยืนยัน:');
-  if (code === 'RESET') {
+// Reset Database Modal Handling
+const resetDbBtn = document.getElementById('reset-db-btn');
+const resetModal = document.getElementById('reset-modal');
+const resetModalCloseBtn = document.getElementById('reset-modal-close-btn');
+const resetModalCancelBtn = document.getElementById('reset-modal-cancel-btn');
+const resetModalConfirmBtn = document.getElementById('reset-modal-confirm-btn');
+const resetConfirmInput = document.getElementById('reset-confirm-input');
+
+function openResetModal() {
+  if (resetConfirmInput) resetConfirmInput.value = '';
+  if (resetModalConfirmBtn) resetModalConfirmBtn.disabled = true;
+  if (resetModal) {
+    resetModal.style.display = 'flex';
+    setTimeout(() => {
+      if (resetConfirmInput) resetConfirmInput.focus();
+    }, 100);
+  }
+}
+
+function closeResetModal() {
+  if (resetModal) resetModal.style.display = 'none';
+  if (resetConfirmInput) resetConfirmInput.value = '';
+  if (resetModalConfirmBtn) resetModalConfirmBtn.disabled = true;
+}
+
+if (resetDbBtn) resetDbBtn.addEventListener('click', openResetModal);
+if (resetModalCloseBtn) resetModalCloseBtn.addEventListener('click', closeResetModal);
+if (resetModalCancelBtn) resetModalCancelBtn.addEventListener('click', closeResetModal);
+
+// Close on backdrop mousedown+mouseup
+let resetModalBackdropDown = false;
+if (resetModal) {
+  resetModal.addEventListener('mousedown', (e) => {
+    resetModalBackdropDown = (e.target === resetModal);
+  });
+  resetModal.addEventListener('mouseup', (e) => {
+    if (resetModalBackdropDown && e.target === resetModal) {
+      closeResetModal();
+    }
+    resetModalBackdropDown = false;
+  });
+}
+
+// Enable confirm button only when "RESET" (case-insensitive) is entered
+if (resetConfirmInput) {
+  resetConfirmInput.addEventListener('input', function() {
+    const val = this.value.trim().toUpperCase();
+    if (resetModalConfirmBtn) {
+      resetModalConfirmBtn.disabled = (val !== 'RESET');
+    }
+  });
+
+  resetConfirmInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && resetModalConfirmBtn && !resetModalConfirmBtn.disabled) {
+      resetModalConfirmBtn.click();
+    }
+  });
+}
+
+if (resetModalConfirmBtn) {
+  resetModalConfirmBtn.addEventListener('click', async function() {
     try {
       await clearDatabase();
-      showToast('ล้างระบบข้อมูลคลังข้อสอบเรียบร้อยแล้ว', 'success');
+      closeResetModal();
+      showToast('ล้างระบบข้อมูลคลังข้อสอบทั้งหมดเรียบร้อยแล้ว', 'success');
       await refreshData();
       switchTab('dashboard');
     } catch (err) {
       showToast('เกิดข้อผิดพลาดในการลบข้อมูล: ' + err, 'danger');
     }
-  } else if (code !== null && code !== '') {
-    showToast('ยืนยันรหัสไม่ถูกต้อง ยกเลิกการล้างข้อมูล', 'warning');
-  }
-});
+  });
+}
 
 // ==========================================
 // 10. Event Listeners Initialization

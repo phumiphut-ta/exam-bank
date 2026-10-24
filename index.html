@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ระบบคลังข้อสอบอัจฉริยะ (exam-bank)</title>
-  <link rel="icon" type="image/png" href="favicon.png?v=1.5.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="favicon.png?v=1.5.0">
+  <link rel="icon" type="image/png" href="favicon.png?v=1.5.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="favicon.png?v=1.5.1">
   <!-- Google Fonts: Sarabun for Thai document/exam layout, Outfit for modern UI -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.5.0">
+  <link rel="stylesheet" href="style.css?v=1.5.1">
 </head>
 <body>
 
@@ -371,17 +371,17 @@
     <!-- Controls (ซ่อนเมื่อสั่งพิมพ์) -->
     <div class="preview-controls no-print">
       <div class="controls-left">
-        <button id="back-to-gen-btn" class="btn btn-outline">
+        <button type="button" id="back-to-gen-btn" class="btn btn-outline">
           <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           <span>ย้อนกลับแก้ไข</span>
         </button>
         <span class="preview-title" id="preview-exam-name">ข้อสอบตัวอย่าง</span>
       </div>
       <div class="controls-center" style="display: flex; gap: 10px; align-items: center;">
-        <button id="toggle-view-exam-btn" class="btn btn-tab active">
+        <button type="button" id="toggle-view-exam-btn" class="btn btn-tab active">
           ดูตัวอย่างกระดาษข้อสอบ
         </button>
-        <button id="toggle-view-key-btn" class="btn btn-tab">
+        <button type="button" id="toggle-view-key-btn" class="btn btn-tab">
           ดูตัวอย่างกระดาษเฉลย
         </button>
         <span style="color: #94a3b8; font-size: 0.9rem; margin-left: 15px;">ขนาดรูปภาพพิมพ์:</span>
@@ -401,7 +401,7 @@
         </select>
       </div>
       <div class="controls-right">
-        <button id="print-exam-btn" class="btn btn-primary btn-lg">
+        <button type="button" id="print-exam-btn" class="btn btn-primary btn-lg">
           <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
           <strong>สั่งพิมพ์ (Print / PDF)</strong>
         </button>
@@ -419,7 +419,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3 id="modal-title">เขียนข้อสอบใหม่</h3>
-        <button id="modal-close-btn" class="modal-close">
+        <button type="button" id="modal-close-btn" class="modal-close">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
@@ -506,6 +506,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=1.5.0"></script>
+  <script src="app.js?v=1.5.1"></script>
 </body>
 </html>

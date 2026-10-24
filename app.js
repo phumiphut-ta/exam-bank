@@ -887,7 +887,13 @@ generatorForm.addEventListener('submit', function(e) {
   });
 
   if (totalCount === 0) {
-    alert('กรุณาระบุจำนวนข้อสอบอย่างน้อย 1 ข้อ เพื่อสร้างข้อสอบ');
+    showToast('กรุณาระบุจำนวนข้อสอบอย่างน้อย 1 ข้อในหมวดหมู่ที่ต้องการ', 'warning');
+    const firstInput = document.querySelector('.category-gen-input');
+    if (firstInput) {
+      firstInput.focus();
+      firstInput.classList.add('input-highlight');
+      setTimeout(() => firstInput.classList.remove('input-highlight'), 1200);
+    }
     return;
   }
 
@@ -1465,11 +1471,44 @@ quickAddBtn.addEventListener('click', () => openQuestionModal());
 modalCloseBtn.addEventListener('click', closeQuestionModal);
 modalCancelBtn.addEventListener('click', closeQuestionModal);
 
-// Close modal when clicking outside contents
-window.addEventListener('click', (e) => {
-  if (e.target === questionModal) {
+// In-App Toast Notification
+function showToast(message, type = 'info') {
+  let container = document.querySelector('.toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container no-print';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  
+  let icon = 'ℹ️';
+  if (type === 'warning') icon = '⚠️';
+  else if (type === 'success') icon = '✅';
+  else if (type === 'danger') icon = '❌';
+
+  toast.innerHTML = `<span>${icon}</span><span>${escapeHTML(message)}</span>`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(-10px)';
+    setTimeout(() => toast.remove(), 250);
+  }, 3500);
+}
+
+// Close modal only when both mousedown and mouseup are on the backdrop itself
+let modalBackdropDown = false;
+questionModal.addEventListener('mousedown', (e) => {
+  modalBackdropDown = (e.target === questionModal);
+});
+
+questionModal.addEventListener('mouseup', (e) => {
+  if (modalBackdropDown && e.target === questionModal) {
     closeQuestionModal();
   }
+  modalBackdropDown = false;
 });
 
 // Image Upload triggers
@@ -1503,8 +1542,14 @@ toggleViewKeyBtn.addEventListener('click', () => {
   renderAnswerKeyPreview(title);
 });
 
-printExamBtn.addEventListener('click', () => {
-  window.print();
+// Safe Print Trigger: blur button and slight timeout to prevent browser dialog cancellation
+printExamBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  printExamBtn.blur();
+  setTimeout(() => {
+    window.print();
+  }, 120);
 });
 
 // Sync and handle image size changes directly in Print Preview

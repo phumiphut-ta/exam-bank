@@ -1363,10 +1363,15 @@ document.getElementById('export-db-btn').addEventListener('click', async functio
     document.body.appendChild(a);
     a.click();
     
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Revoke URL with safe delay so browser download dialog is not aborted prematurely
+    setTimeout(() => {
+      if (document.body.contains(a)) document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 2500);
+
+    showToast('ส่งออกข้อมูลคลังข้อสอบสำเร็จแล้ว (.json)', 'success');
   } catch (error) {
-    alert('เกิดข้อผิดพลาดในการส่งออกข้อมูล: ' + error);
+    showToast('เกิดข้อผิดพลาดในการส่งออกข้อมูล: ' + error, 'danger');
   }
 });
 
@@ -1401,14 +1406,13 @@ importDbBtn.addEventListener('click', function() {
       
       // Validation check
       if (!data.categories || !data.questions) {
-        alert('รูปแบบไฟล์สำรองไม่ถูกต้อง กรุณาเลือกไฟล์ JSON ที่ถูกส่งออกมาจากระบบนี้');
+        showToast('รูปแบบไฟล์สำรองไม่ถูกต้อง กรุณาเลือกไฟล์ JSON ที่ถูกส่งออกมาจากระบบนี้', 'danger');
         return;
       }
 
       if (confirm(`คุณต้องการนำเข้าหมวดหมู่จำนวน ${data.categories.length} รายการ และข้อสอบจำนวน ${data.questions.length} รายการ หรือไม่?`)) {
         // Import categories
         for (const cat of data.categories) {
-          // Check if exists, update or add
           await updateData('categories', cat);
         }
 
@@ -1417,7 +1421,7 @@ importDbBtn.addEventListener('click', function() {
           await updateData('questions', q);
         }
 
-        alert('นำเข้าข้อมูลเรียบร้อยแล้ว!');
+        showToast(`นำเข้าหมวดหมู่ ${data.categories.length} รายการ และข้อสอบ ${data.questions.length} รายการ สำเร็จ!`, 'success');
         
         // Reset file inputs
         importDbFile.value = '';
@@ -1428,7 +1432,7 @@ importDbBtn.addEventListener('click', function() {
         switchTab('dashboard');
       }
     } catch (err) {
-      alert('ไม่สามารถอ่านไฟล์ได้ รูปแบบ JSON ไม่ถูกต้อง: ' + err);
+      showToast('ไม่สามารถอ่านไฟล์ได้ รูปแบบ JSON ไม่ถูกต้อง: ' + err, 'danger');
     }
   };
   reader.readAsText(file);
@@ -1440,14 +1444,14 @@ document.getElementById('reset-db-btn').addEventListener('click', async function
   if (code === 'RESET') {
     try {
       await clearDatabase();
-      alert('ล้างระบบข้อมูลคลังข้อสอบเรียบร้อยแล้ว');
+      showToast('ล้างระบบข้อมูลคลังข้อสอบเรียบร้อยแล้ว', 'success');
       await refreshData();
       switchTab('dashboard');
     } catch (err) {
-      alert('เกิดข้อผิดพลาดในการลบข้อมูล: ' + err);
+      showToast('เกิดข้อผิดพลาดในการลบข้อมูล: ' + err, 'danger');
     }
-  } else if (code !== null) {
-    alert('ยืนยันรหัสไม่ถูกต้อง ยกเลิกการล้างข้อมูล');
+  } else if (code !== null && code !== '') {
+    showToast('ยืนยันรหัสไม่ถูกต้อง ยกเลิกการล้างข้อมูล', 'warning');
   }
 });
 

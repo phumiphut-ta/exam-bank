@@ -16,6 +16,7 @@ let editingQuestionId = null;
 let currentQuestionImageBase64 = null;
 let generatedExamQuestions = [];
 let generatedExamSets = [];
+let generatorCategoryOrder = [];
 
 // DOM Elements
 const sidebarButtons = document.querySelectorAll('.nav-btn');
@@ -564,6 +565,15 @@ function renderQuestionsList() {
 // Render Tab 4: Generator Configuration
 function renderGeneratorConfig() {
   const container = document.getElementById('generator-categories-list');
+  if (!container) return;
+
+  // Preserve any values user already typed so we don't wipe them on refresh
+  const currentValues = {};
+  container.querySelectorAll('.category-gen-input').forEach(input => {
+    const id = parseInt(input.getAttribute('data-category-id'));
+    if (id) currentValues[id] = input.value;
+  });
+
   container.innerHTML = '';
 
   if (categories.length === 0) {
@@ -571,22 +581,161 @@ function renderGeneratorConfig() {
     return;
   }
 
-  categories.forEach(cat => {
+  // Synchronize generatorCategoryOrder with current categories list
+  const validCatIds = categories.map(c => c.id);
+  // Keep existing order for valid IDs
+  generatorCategoryOrder = generatorCategoryOrder.filter(id => validCatIds.includes(id));
+  // Append any new categories not yet in the ordering array
+  validCatIds.forEach(id => {
+    if (!generatorCategoryOrder.includes(id)) {
+      generatorCategoryOrder.push(id);
+    }
+  });
+
+  // Sort categories by generatorCategoryOrder
+  const orderedCategories = [...categories].sort((a, b) => {
+    return generatorCategoryOrder.indexOf(a.id) - generatorCategoryOrder.indexOf(b.id);
+  });
+
+  orderedCategories.forEach((cat, index) => {
     const count = questions.filter(q => q.categoryId === cat.id).length;
+    const val = currentValues[cat.id] !== undefined ? currentValues[cat.id] : '0';
 
     const row = document.createElement('div');
     row.className = 'generator-category-row';
+    row.setAttribute('draggable', 'true');
+    row.setAttribute('data-category-id', cat.id);
     row.innerHTML = `
+      <div class="gen-cat-drag-handle" title="คลิกค้างแล้วลากเพื่อย้ายลำดับ" aria-label="ลากเพื่อย้ายลำดับ">
+        <svg class="icon-drag" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+          <circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>
+          <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+          <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
+        </svg>
+      </div>
+      <div class="gen-cat-order-badge" title="ลำดับที่">${index + 1}</div>
       <div class="gen-cat-meta">
         <span class="gen-cat-title">${escapeHTML(cat.name)}</span>
         <span class="gen-cat-available">มีข้อสอบในคลังทั้งหมด ${count} ข้อ</span>
       </div>
-      <div class="gen-cat-input-group">
-        <input type="number" class="category-gen-input" data-category-id="${cat.id}" min="0" max="${count}" value="0">
-        <span>ข้อ</span>
+      <div class="gen-cat-controls">
+        <div class="gen-cat-nudge-btns">
+          <button type="button" class="btn-nudge btn-nudge-up" title="เลื่อนขึ้น">▲</button>
+          <button type="button" class="btn-nudge btn-nudge-down" title="เลื่อนลง">▼</button>
+        </div>
+        <div class="gen-cat-input-group">
+          <input type="number" class="category-gen-input" data-category-id="${cat.id}" min="0" max="${count}" value="${val}">
+          <span>ข้อ</span>
+        </div>
       </div>
     `;
+
+    // Nudge button listeners
+    const upBtn = row.querySelector('.btn-nudge-up');
+    const downBtn = row.querySelector('.btn-nudge-down');
+
+    upBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const prev = row.previousElementSibling;
+      if (prev && prev.classList.contains('generator-category-row')) {
+        container.insertBefore(row, prev);
+        updateCategoryOrderFromDOM();
+      }
+    });
+
+    downBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const next = row.nextElementSibling;
+      if (next && next.classList.contains('generator-category-row')) {
+        container.insertBefore(next, row);
+        updateCategoryOrderFromDOM();
+      }
+    });
+
+    // Drag & Drop listeners
+    row.addEventListener('dragstart', (e) => {
+      row.classList.add('is-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', String(cat.id));
+    });
+
+    row.addEventListener('dragend', () => {
+      row.classList.remove('is-dragging');
+      updateCategoryOrderFromDOM();
+    });
+
     container.appendChild(row);
+  });
+
+  // Enable container dragover with dynamic positioning
+  setupCategoryListDragOver(container);
+  updateCategoryNudgeButtons(container);
+}
+
+// Setup real-time dynamic reordering during dragover
+function setupCategoryListDragOver(container) {
+  if (container._dragOverInitialized) return;
+  container._dragOverInitialized = true;
+
+  container.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const draggingRow = container.querySelector('.is-dragging');
+    if (!draggingRow) return;
+
+    const afterElement = getDragAfterElement(container, e.clientY);
+    if (afterElement == null) {
+      container.appendChild(draggingRow);
+    } else {
+      container.insertBefore(draggingRow, afterElement);
+    }
+  });
+
+  container.addEventListener('drop', (e) => {
+    e.preventDefault();
+    updateCategoryOrderFromDOM();
+  });
+}
+
+function getDragAfterElement(container, y) {
+  const draggableElements = [...container.querySelectorAll('.generator-category-row:not(.is-dragging)')];
+  return draggableElements.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) {
+      return { offset: offset, element: child };
+    } else {
+      return closest;
+    }
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+function updateCategoryOrderFromDOM() {
+  const container = document.getElementById('generator-categories-list');
+  if (!container) return;
+
+  const rows = container.querySelectorAll('.generator-category-row');
+  const newOrder = [];
+  rows.forEach((row, idx) => {
+    const catId = parseInt(row.getAttribute('data-category-id'));
+    if (catId) newOrder.push(catId);
+    const badge = row.querySelector('.gen-cat-order-badge');
+    if (badge) badge.textContent = idx + 1;
+  });
+
+  generatorCategoryOrder = newOrder;
+  updateCategoryNudgeButtons(container);
+}
+
+function updateCategoryNudgeButtons(container) {
+  const rows = container.querySelectorAll('.generator-category-row');
+  rows.forEach((row, idx) => {
+    const upBtn = row.querySelector('.btn-nudge-up');
+    const downBtn = row.querySelector('.btn-nudge-down');
+    if (upBtn) upBtn.disabled = (idx === 0);
+    if (downBtn) downBtn.disabled = (idx === rows.length - 1);
   });
 }
 
@@ -707,24 +856,33 @@ generatorForm.addEventListener('submit', function(e) {
   const instructions = document.getElementById('exam-instructions-input').value.trim();
   const shuffleQuestions = document.getElementById('shuffle-questions-checkbox').checked;
   const shuffleOptions = document.getElementById('shuffle-options-checkbox').checked;
+  const orderByCategory = document.getElementById('order-by-category-checkbox') ? document.getElementById('order-by-category-checkbox').checked : true;
+  const showCategoryHeaders = document.getElementById('show-category-headers-checkbox') ? document.getElementById('show-category-headers-checkbox').checked : false;
 
-  // Retrieve requested question quantity per category
-  const inputs = document.querySelectorAll('.category-gen-input');
-  let selectedPool = [];
+  // Retrieve requested question quantity per category in current DOM order
+  const rows = document.querySelectorAll('.generator-category-row');
+  let categoryPicks = [];
   let totalCount = 0;
 
-  inputs.forEach(input => {
+  rows.forEach(row => {
+    const input = row.querySelector('.category-gen-input');
+    if (!input) return;
     const catId = parseInt(input.getAttribute('data-category-id'));
-    const count = parseInt(input.value);
-    totalCount += count;
+    const count = parseInt(input.value) || 0;
+    const cat = categories.find(c => c.id === catId);
+    const catName = cat ? cat.name : '';
 
+    totalCount += count;
     if (count > 0) {
-      // Filter questions in this category
       const pool = questions.filter(q => q.categoryId === catId);
-      
-      // Shuffle the pool and slice the desired count
-      const shuffledPool = shuffleArray([...pool]);
-      selectedPool = selectedPool.concat(shuffledPool.slice(0, count));
+      // Sample count questions from pool (initial shuffle ensures fair sampling from question bank)
+      const sampled = shuffleArray([...pool]).slice(0, count);
+      categoryPicks.push({
+        catId,
+        catName,
+        count,
+        questions: sampled
+      });
     }
   });
 
@@ -741,11 +899,35 @@ generatorForm.addEventListener('submit', function(e) {
 
   for (let s = 0; s < setCount; s++) {
     const setName = setLetters[s];
-    
-    // We shuffle the selected pool for each set (if shuffleQuestions is checked or for sets B/C/D to keep them distinct)
-    let setQuestions = [...selectedPool];
-    if (shuffleQuestions || s > 0) {
-      setQuestions = shuffleArray(setQuestions);
+    let setQuestions = [];
+
+    if (orderByCategory) {
+      // Group and order questions according to the user's dragged category sequence
+      categoryPicks.forEach((pick, pIndex) => {
+        let catQuestions = [...pick.questions];
+        if (shuffleQuestions || s > 0) {
+          catQuestions = shuffleArray(catQuestions);
+        }
+        catQuestions.forEach((q, qIdx) => {
+          setQuestions.push({
+            ...q,
+            categoryId: pick.catId,
+            categoryName: pick.catName,
+            isCategoryStart: qIdx === 0,
+            categoryPartNum: pIndex + 1
+          });
+        });
+      });
+    } else {
+      // Global shuffle across all categories
+      let allQuestions = [];
+      categoryPicks.forEach(pick => {
+        allQuestions = allQuestions.concat(pick.questions);
+      });
+      if (shuffleQuestions || s > 0) {
+        allQuestions = shuffleArray(allQuestions);
+      }
+      setQuestions = allQuestions;
     }
 
     // Process choices and correct answers for each question in this set
@@ -780,6 +962,10 @@ generatorForm.addEventListener('submit', function(e) {
 
       return {
         id: q.id,
+        categoryId: q.categoryId,
+        categoryName: q.categoryName,
+        isCategoryStart: q.isCategoryStart,
+        categoryPartNum: q.categoryPartNum,
         num: index + 1,
         questionText: q.questionText,
         image: q.image,
@@ -867,6 +1053,8 @@ function renderExamPreview(title, instructions) {
   const showId = document.getElementById('show-student-id').checked;
   const labelId = document.getElementById('label-student-id').value.trim() || 'ว่าง3';
 
+  const showCategoryHeaders = document.getElementById('show-category-headers-checkbox') ? document.getElementById('show-category-headers-checkbox').checked : false;
+
   // Get image size setting
   const imageSizeSelect = document.getElementById('exam-image-size-select');
   const imageSize = imageSizeSelect ? imageSizeSelect.value : 'large';
@@ -934,6 +1122,11 @@ function renderExamPreview(title, instructions) {
         estimatedHeight += 55;  // 2 rows
       }
 
+      // Category section header height
+      if (showCategoryHeaders && q.isCategoryStart && q.categoryName) {
+        estimatedHeight += 38;
+      }
+
       // Add extra padding margin
       estimatedHeight += 15;
 
@@ -994,6 +1187,14 @@ function renderExamPreview(title, instructions) {
       questionsContainer.className = 'exam-questions-list';
 
       pageQuestions.forEach(q => {
+        if (showCategoryHeaders && q.isCategoryStart && q.categoryName) {
+          const sectionHeader = document.createElement('div');
+          sectionHeader.className = 'exam-section-header';
+          sectionHeader.contentEditable = 'true';
+          sectionHeader.textContent = `ตอนที่ ${q.categoryPartNum || 1}: ${q.categoryName}`;
+          questionsContainer.appendChild(sectionHeader);
+        }
+
         const qItem = document.createElement('div');
         qItem.className = 'exam-q-item';
         

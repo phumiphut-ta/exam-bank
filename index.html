@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ระบบคลังข้อสอบอัจฉริยะ (exam-bank)</title>
-  <link rel="icon" type="image/png" href="favicon.png?v=1.4.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="favicon.png?v=1.4.0">
+  <link rel="icon" type="image/png" href="favicon.png?v=1.5.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="favicon.png?v=1.5.0">
   <!-- Google Fonts: Sarabun for Thai document/exam layout, Outfit for modern UI -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.4.0">
+  <link rel="stylesheet" href="style.css?v=1.5.0">
 </head>
 <body>
 
@@ -265,6 +265,15 @@
                   <input type="checkbox" id="shuffle-options-checkbox" checked> <strong>สุ่มสลับตัวเลือก ก ข ค ง (Shuffle Options)</strong>
                 </label>
                 <p class="checkbox-desc">สลับตำแหน่งของ ก ข ค ง ของแต่ละข้อ (เฉลยข้อสอบจะเปลี่ยนตามตำแหน่งที่ถูกต้องให้อัตโนมัติ)</p>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="order-by-category-checkbox" checked> <strong>เรียงข้อสอบตามลำดับหมวดหมู่ (Keep Category Order)</strong>
+                </label>
+                <p class="checkbox-desc">ข้อสอบจะจัดเรียงตามลำดับหมวดหมู่ที่คุณลากจัดไว้ด้านล่าง (หากเลือกสุ่มข้อสอบ ระบบจะสุ่มสลับเฉพาะข้อที่อยู่ภายในหมวดหมู่นั้นๆ)</p>
+
+                <label class="checkbox-label" style="margin-top: 4px;">
+                  <input type="checkbox" id="show-category-headers-checkbox"> <strong>แสดงชื่อหมวดหมู่คั่นในกระดาษข้อสอบ (Section Headers)</strong>
+                </label>
+                <p class="checkbox-desc">พิมพ์แถบชื่อหมวดหมู่คั่นเมื่อขึ้นหมวดใหม่ เช่น "ตอนที่ 1: ความรู้ทั่วไป"</p>
               </div>
 
               <div class="form-group" style="margin-top: 15px;">
@@ -291,7 +300,15 @@
 
               <div class="divider-line"></div>
 
-              <h4 class="form-subtitle">กำหนดจำนวนข้อสอบตามหมวดหมู่</h4>
+              <div class="category-order-header-box">
+                <div class="subtitle-with-badge">
+                  <h4 class="form-subtitle" style="margin-bottom: 0;">กำหนดจำนวนข้อสอบและจัดลำดับหมวดหมู่</h4>
+                  <span class="drag-hint-badge">↕️ ลากสลับตำแหน่งเพื่อจัดลำดับ</span>
+                </div>
+                <p class="checkbox-desc" style="margin-left: 0; margin-top: 4px; margin-bottom: 8px;">
+                  คลิกค้างที่ไอคอน ⠿ แล้วลาก (Drag & Drop) หรือกดปุ่ม ▲ ▼ เพื่อกำหนดว่าต้องการให้ข้อสอบหมวดใดขึ้นก่อน-หลัง
+                </p>
+              </div>
               <div id="generator-categories-list" class="generator-categories-list">
                 <!-- Dynamically populated with category quantity inputs -->
                 <p class="empty-state">กรุณาเพิ่มหมวดหมู่และข้อสอบก่อนจัดชุด</p>
@@ -489,6 +506,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=1.4.0"></script>
+  <script src="app.js?v=1.5.0"></script>
 </body>
 </html>
